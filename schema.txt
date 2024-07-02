@@ -1,0 +1,3 @@
+FactTable(ID, D1, D2, Fact1, Fact2)
+D1(D1, Col1, Col2)
+D2(D2, Col3, Col4)

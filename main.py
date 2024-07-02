@@ -35,7 +35,6 @@ class BitMapIndex:
                     index += "0"
             indexes[u] = index
 
-        print(indexes)
         return indexes
 
 
@@ -105,7 +104,6 @@ def ANDdata(indexes):
             num &= bitsList[j][i]
         result += str(num)
 
-    print(result)
     return result
 
 
@@ -124,7 +122,6 @@ def ORdata(indexes):
             num |= bitsList[j][i]
         result += str(num)
 
-    print(result)
     return result
 
 
@@ -134,7 +131,11 @@ def search(indexedColumns, searchOP, searchWithIndex):
     data = []
     if searchWithIndex:
         for index in indexedColumns:
-            indexes.append(index[0].indexes[index[1]])
+            try:
+                indexes.append(index[0].indexes[index[1]])
+            except:
+                print(f"Polje {index[1]} ne postoji u indeksu {index[0].name}")
+                quit()
 
         if len(searchOP) > 1:
             # Ako treba obe operacije
@@ -144,7 +145,10 @@ def search(indexedColumns, searchOP, searchWithIndex):
                 if andRes[i] == "1" or orRes[i] == "1":
                     if dataTable.data[i] not in data:
                         data.append(dataTable.data[i])
-
+            print("AND operacija: ", andRes)
+            print("OR operacija: ", orRes)
+            print(data)
+            return data
         else:
             # Ako treba pojedinacna operacija
             if searchOP[0] == "AND":
@@ -152,16 +156,16 @@ def search(indexedColumns, searchOP, searchWithIndex):
                 for i in range(len(andRes)):
                     if andRes[i] == "1":
                         data.append(dataTable.data[i])
-                # print(data)
+                print("Indeks nakon AND operacije: ", andRes)
+                print(data)
                 return data
-
-
             elif searchOP[0] == "OR":
                 orRes = ORdata(indexes)
                 for i in range(len(orRes)):
                     if orRes[i] == "1":
                         data.append(dataTable.data[i])
-                # print(data)
+                print("Indek nakon OR operacije: ", orRes)
+                print(data)
                 return data
     else:
         if searchOP[0] == "AND":
@@ -176,8 +180,6 @@ def search(indexedColumns, searchOP, searchWithIndex):
                     flag = True
             print(data)
             return data
-
-
         elif searchOP[0] == "OR":
             for d in dataTable.data:
                 for index in indexedColumns:
@@ -187,19 +189,23 @@ def search(indexedColumns, searchOP, searchWithIndex):
             print(data)
             return data
 
-# Funkcija treba da uradi nesto sa datim informacijama
 
-
-def agreagate(operation, data):
+def agreagate(operation, data, fact=0):
     # Formatiranje neindeksiranih kolona
-    print(data)
-
     factColumns = []
     for i in range(dataTable.fCount):
         fCol = []
         for d in data:
-            fCol.append(d[1+dataTable.dCount+i])
+            fCol.append(d[1 + dataTable.dCount + i])
         factColumns.append(fCol)
+
+    if fact != 0:
+        try:
+            factColumns = [factColumns[fact - 1]]
+        except:
+            print("Izabrana nepostojeca fact kolona!")
+            quit()
+
     print(factColumns)
 
     if operation == "min":
@@ -213,7 +219,7 @@ def agreagate(operation, data):
             sum = 0
             for f in fact:
                 sum += int(f)
-            print(sum/len(fact))
+            print(sum / len(fact))
     elif operation == "sum":
         for fact in factColumns:
             sum = 0
@@ -228,7 +234,7 @@ def agreagate(operation, data):
             print(cnt)
     else:
         print("Uneta nepostojeca agregatna funckija!")
-        return None
+        quit()
 
 
 # ===========================Main================================
@@ -236,16 +242,20 @@ if __name__ == '__main__':
     dataTable = createDataTable("SchemaAndData.csv")
     indexDict = createIndexDict(dataTable)
 
+    print("Indeksirane tabele")
     for x, y in indexDict.items():
         print(x)
         print(y.data)
         print(y.indexes)
+    print()
 
     # Parametri pretraga
-    indexedColumns = [[indexDict["D1"], "A"], [indexDict["D2"], "X"]]
+    indexedColumns = [[indexDict["D1"], "A"], [indexDict["D2"], "X"], [indexDict["D3"], "G"]]
     searchOP = ["OR"]
 
-    print("DALJE")
-    searchData = search(indexedColumns, searchOP, False)
+    print()
+    print("Podaci pretrage")
+    searchData = search(indexedColumns, searchOP, True)
 
-    agreagate("avg", searchData)
+    print("Podaci agregacije")
+    agreagate("max", searchData, 1)
